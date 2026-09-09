@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-CONF_DIR="/tmp/mihomo"
+CONF_DIR="/data/mihomo"
 CONF_FILE="${CONF_DIR}/config.yaml"
 
 mkdir -p "${CONF_DIR}"
