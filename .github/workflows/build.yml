@@ -1,0 +1,104 @@
+name: Build & Publish addon images
+
+# Automated multi-addon publishing. Single source of truth: each addon's config.yaml
+#   - version field = addon version = image tag (HA uses it to offer updates)
+#   - image  field = image name (with {arch} placeholder); CI derives the ghcr / dockerhub tags from it
+# The single source of truth for specific software versions (e.g. mihomo) is the ARG default in each Dockerfile.
+#
+# Your action: bump an addon's config.yaml version (and its Dockerfile ARG when bumping the software)
+#   -> commit -> push main.
+# This workflow then: iterates over all addons and, for any whose image version does not yet exist,
+#   builds multi-arch and pushes to ghcr + dockerhub (idempotent), then tags <addon>-v<version> for archival.
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "*/config.yaml"
+      - "*/Dockerfile"
+      - "*/run.sh"
+      - "*/build.yaml"
+      - ".github/workflows/build.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # allow creating and pushing <addon>-v<version> tags
+      packages: write      # allow pushing to ghcr
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history is needed to create/push tags
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: axelburks
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: axelburks
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & publish new addon versions
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          published=0
+          for cfg in */config.yaml; do
+            addon="$(dirname "$cfg")"
+            version="$(grep -E '^version:' "$cfg" | head -1 | sed -E 's/^version:[[:space:]]*"?([^"]+)"?.*/\1/')"
+            img_tmpl="$(grep -E '^image:' "$cfg" | head -1 | sed -E 's/^image:[[:space:]]*"?([^"]+)"?.*/\1/')"
+            if [ -z "$version" ] || [ -z "$img_tmpl" ]; then
+              echo "::warning::$addon is missing the version or image field, skipping"
+              continue
+            fi
+            basename="${img_tmpl##*/}"                           # {arch}-mihomo-proxy
+            ghcr_amd64="ghcr.io/axelburks/${basename/\{arch\}/amd64}"
+
+            if docker manifest inspect "${ghcr_amd64}:${version}" >/dev/null 2>&1; then
+              echo "== [$addon] version ${version} already published, skipping"
+              continue
+            fi
+
+            echo "== [$addon] building and publishing version ${version}"
+            for arch in amd64 aarch64; do
+              case "$arch" in
+                amd64)   platform=linux/amd64; base=ghcr.io/home-assistant/amd64-base:latest ;;
+                aarch64) platform=linux/arm64; base=ghcr.io/home-assistant/aarch64-base:latest ;;
+              esac
+              img="${basename/\{arch\}/$arch}"
+              docker buildx build \
+                --platform "$platform" \
+                --build-arg BUILD_FROM="$base" \
+                --build-arg BUILD_ARCH="$arch" \
+                -t "ghcr.io/axelburks/${img}:${version}" \
+                -t "docker.io/axelburks/${img}:${version}" \
+                --push \
+                "$addon"
+            done
+
+            tag="${addon}-v${version}"
+            if git rev-parse "$tag" >/dev/null 2>&1; then
+              echo "== [$addon] tag ${tag} already exists, skipping tagging"
+            else
+              git tag -a "$tag" -m "Release ${addon} ${version}"
+              git push origin "$tag"
+            fi
+            published=$((published+1))
+          done
+
+          echo "published ${published} addon version(s) this run"

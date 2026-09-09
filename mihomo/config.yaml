@@ -1,0 +1,71 @@
+name: "Mihomo Proxy"
+version: "0.0.1"
+slug: mihomo_proxy
+description: "Mihomo (Clash.Meta) TUN transparent proxy for Home Assistant"
+url: "https://github.com/axelburks/ha-addons/tree/main/mihomo"
+arch:
+  - amd64
+  - aarch64
+image: "ghcr.io/axelburks/{arch}-mihomo-proxy"
+init: false
+host_network: true
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+devices:
+  - /dev/net/tun
+options:
+  config: |
+    mixed-port: 7890
+    allow-lan: false
+    mode: rule
+    log-level: info
+    ipv6: false
+    external-controller: 127.0.0.1:9090
+
+    tun:
+      enable: true
+      stack: system
+      dns-hijack:
+        - any:53
+      auto-route: true
+      auto-detect-interface: true
+
+    dns:
+      enable: true
+      listen: 0.0.0.0:1053
+      enhanced-mode: redir-host
+      nameserver:
+        - 223.5.5.5
+
+    sniffer:
+      enable: true
+      sniff:
+        TLS:
+          ports: [443]
+        HTTP:
+          ports: [80]
+      skip-domain:
+        - "+.local"
+
+    proxies: []
+
+    proxy-groups:
+      - name: "PROXY"
+        type: select
+        proxies:
+          - "DIRECT"
+
+    rules:
+      - DOMAIN-SUFFIX,github.com,PROXY
+      - DOMAIN-SUFFIX,githubusercontent.com,PROXY
+      - DOMAIN-SUFFIX,githubassets.com,PROXY
+      - DOMAIN-SUFFIX,ghcr.io,PROXY
+      - DOMAIN-SUFFIX,docker.io,PROXY
+      - DOMAIN-SUFFIX,docker.com,PROXY
+      - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
+      - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
+      - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
+      - MATCH,DIRECT
+schema:
+  config: str
