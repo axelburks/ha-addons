@@ -6,8 +6,9 @@ ARG BUILD_ARCH
 
 # Dependencies: iptables/iproute2 (TUN routing), curl, jq (read config), tzdata,
 # ca-certificates, nginx (serve the metacubexd panel + reverse-proxy the API on
-# the ingress port), git (fetch the prebuilt panel).
-RUN apk add --no-cache iptables iproute2 curl ca-certificates tzdata jq nginx git
+# the ingress port), git (fetch the prebuilt panel), wireguard-tools (optional
+# wg0 server, brought up by run.sh only when enabled in the add-on config).
+RUN apk add --no-cache iptables iproute2 curl ca-certificates tzdata jq nginx git wireguard-tools
 
 # Pick the mihomo binary asset per architecture:
 #   amd64   -> mihomo-linux-amd64-compatible-<ver>.gz (best compatibility, no CPU-feature requirement)

@@ -1,6 +1,6 @@
 # Axel's Home Assistant Add-ons
 
-Axel's private Home Assistant add-on repository.
+Axel's Home Assistant add-on repository.
 
 ## Add to Home Assistant
 

@@ -23,6 +23,10 @@ proxy-groups:
   - {name: PROXY, type: select, proxies: [my-proxy, DIRECT]}
 ```
 
+## Optional: WireGuard inbound
+
+An optional WireGuard server (**off by default**). When enabled, inbound tunnel traffic is picked up by mihomo's TUN and gets the same rule-based routing. Each peer's client config is printed to the add-on **Log**.
+
 ## Notes
 
 - `host_network` + `NET_ADMIN`/`NET_RAW` + `/dev/net/tun`: required for TUN transparent proxying.
