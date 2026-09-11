@@ -25,14 +25,14 @@ fi
 # Optional WireGuard server (default OFF). wg0 uses "Table = off" so it never
 # touches the default route, leaving mihomo's auto-route in sole charge. 
 # ---------------------------------------------------------------------------
-WG_ENABLED="$(jq -r '.wireguard.enabled // false' /data/options.json)"
-WG_PEERS="$(jq -r '.wireguard.peers // ""' /data/options.json)"
+WG_ENABLED="$(jq -r '.wireguard_enabled // false' /data/options.json)"
+WG_PEERS="$(jq -r '.wireguard_peers // ""' /data/options.json)"
 if [ "${WG_ENABLED}" = "true" ] && [ -n "${WG_PEERS}" ]; then
-  WG_SUBNET="$(jq -r '.wireguard.internal_subnet // "10.13.13.0"' /data/options.json)"
-  WG_ALLOWED="$(jq -r '.wireguard.allowed_ips // "0.0.0.0/0"' /data/options.json)"
-  WG_PORT="$(jq -r '.wireguard.listen_port // 51820' /data/options.json)"
-  WG_DNS="$(jq -r '.wireguard.peer_dns // ""' /data/options.json)"
-  WG_URL="$(jq -r '.wireguard.server_url // ""' /data/options.json)"
+  WG_SUBNET="$(jq -r '.wireguard_internal_subnet // "10.13.13.0"' /data/options.json)"
+  WG_ALLOWED="$(jq -r '.wireguard_allowed_ips // "0.0.0.0/0"' /data/options.json)"
+  WG_PORT="$(jq -r '.wireguard_listen_port // 51820' /data/options.json)"
+  WG_DNS="$(jq -r '.wireguard_peer_dns // ""' /data/options.json)"
+  WG_URL="$(jq -r '.wireguard_server_url // ""' /data/options.json)"
   # Empty server_url -> auto-detect the LAN IP on the default-route interface.
   if [ -z "${WG_URL}" ]; then
     WG_URL="$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}' | head -1 || true)"

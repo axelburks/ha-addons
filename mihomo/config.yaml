@@ -1,5 +1,5 @@
 name: "Mihomo Proxy"
-version: "0.0.4"
+version: "0.0.5"
 slug: mihomo_proxy
 description: "Mihomo (Clash.Meta) TUN transparent proxy for Home Assistant"
 url: "https://github.com/axelburks/ha-addons/tree/main/mihomo"
@@ -20,14 +20,13 @@ devices:
   - /dev/net/tun
 schema:
   config: str
-  wireguard:
-    enabled: bool?
-    peers: str?
-    internal_subnet: str?
-    allowed_ips: str?
-    listen_port: int?
-    server_url: str?
-    peer_dns: str?
+  wireguard_enabled: bool?
+  wireguard_peers: str?
+  wireguard_internal_subnet: str?
+  wireguard_allowed_ips: str?
+  wireguard_listen_port: int?
+  wireguard_server_url: str?
+  wireguard_peer_dns: str?
 options:
   config: |
     mixed-port: 7890
