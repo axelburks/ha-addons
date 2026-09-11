@@ -18,12 +18,14 @@ privileged:
   - NET_RAW
 devices:
   - /dev/net/tun
+schema:
+  config: str
 options:
   config: |
     mixed-port: 7890
     allow-lan: false
     mode: rule
-    log-level: warning
+    log-level: error
     ipv6: false
     external-controller: 127.0.0.1:9090
     geodata-mode: true
@@ -43,18 +45,24 @@ options:
         - 1.0.0.1:53
       auto-route: true
       auto-detect-interface: true
+      route-exclude-address:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
 
     dns:
       enable: true
-      listen: 0.0.0.0:1053
       ipv6: false
-      enhanced-mode: fake-ip
-      fake-ip-range: 28.0.0.1/16
-      fake-ip-filter:
-        - "+.lan"
-        - "+.local"
+      listen: 0.0.0.0:1053
       nameserver:
         - system
+      enhanced-mode: fake-ip
+      fake-ip-range: 28.0.0.1/16
+      fake-ip-filter-mode: rule
+      fake-ip-filter:
+        - GEOSITE,private,real-ip
+        - GEOSITE,cn,real-ip
+        - MATCH,fake-ip
 
     sniffer:
       enable: true
@@ -84,9 +92,8 @@ options:
       - DOMAIN-SUFFIX,ghcr.io,PROXY
       - DOMAIN-SUFFIX,docker.io,PROXY
       - DOMAIN-SUFFIX,docker.com,PROXY
-      - IP-CIDR,10.0.0.0/8,DIRECT,no-resolve
-      - IP-CIDR,172.16.0.0/12,DIRECT,no-resolve
-      - IP-CIDR,192.168.0.0/16,DIRECT,no-resolve
-      - MATCH,DIRECT
-schema:
-  config: str
+      - GEOSITE,private,DIRECT
+      - GEOIP,private,DIRECT,no-resolve
+      - GEOSITE,cn,DIRECT
+      - GEOIP,CN,DIRECT,no-resolve
+      - MATCH,PROXY

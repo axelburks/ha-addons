@@ -8,7 +8,7 @@ In the add-on store, open this add-on, then **Install** and **Start**. Before th
 
 ## Web UI
 
-Once started, a **metacubexd** control panel is available in the HA sidebar (and via *Open Web UI* on the add-on page) — switch nodes/groups, watch live traffic and connections, and inspect rules. It is served through HA ingress: access goes through HA's own authentication, the mihomo API stays bound to `127.0.0.1` and is never exposed on the LAN, and no extra host port is used. The panel auto-detects its backend, so no manual URL/secret is needed.
+Once started, a **metacubexd** control panel is available via *Open Web UI* on the add-on page — switch nodes/groups, watch live traffic and connections, and inspect rules.
 
 ## Configuration
 
@@ -27,5 +27,3 @@ proxy-groups:
 
 - `host_network` + `NET_ADMIN`/`NET_RAW` + `/dev/net/tun`: required for TUN transparent proxying.
 - The Web UI needs `external-controller: 127.0.0.1:9090` in `config` (the default). Keep it on `127.0.0.1` — nginx reverse-proxies it through ingress; do not remove it or the panel stops working.
-- DNS defaults to `223.5.5.5` (redir-host); direct domains resolve through it, proxied domains are resolved by the proxy side.
-- Whitelist rules are in `rules` within `config`; only listed domains go through `PROXY`, everything else is `DIRECT`.
