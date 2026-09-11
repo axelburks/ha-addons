@@ -1,5 +1,5 @@
 name: "Mihomo Proxy"
-version: "0.0.2"
+version: "0.0.3"
 slug: mihomo_proxy
 description: "Mihomo (Clash.Meta) TUN transparent proxy for Home Assistant"
 url: "https://github.com/axelburks/ha-addons/tree/main/mihomo"
@@ -9,6 +9,10 @@ arch:
 image: "ghcr.io/axelburks/{arch}-mihomo-proxy"
 init: false
 host_network: true
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:shield-half-full
+panel_title: Mihomo
 privileged:
   - NET_ADMIN
   - NET_RAW
@@ -19,7 +23,7 @@ options:
     mixed-port: 7890
     allow-lan: false
     mode: rule
-    log-level: info
+    log-level: warning
     ipv6: false
     external-controller: 127.0.0.1:9090
     geodata-mode: true
@@ -33,10 +37,10 @@ options:
       enable: true
       stack: system
       dns-hijack:
-        - tcp://any:53
-        - tcp://any:853
-        - any:53
-        - any:853
+        - 8.8.8.8:53
+        - 8.8.4.4:53
+        - 1.1.1.1:53
+        - 1.0.0.1:53
       auto-route: true
       auto-detect-interface: true
 
@@ -50,7 +54,7 @@ options:
         - "+.lan"
         - "+.local"
       nameserver:
-        - 223.5.5.5
+        - system
 
     sniffer:
       enable: true

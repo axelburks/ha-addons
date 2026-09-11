@@ -21,8 +21,31 @@ if [ ! -c /dev/net/tun ]; then
   mknod /dev/net/tun c 10 200 || true
 fi
 
+# Web UI: nginx serves the metacubexd panel on the ingress port and reverse-proxies
+# the external-controller API (127.0.0.1:9090) so it stays same-origin behind HA
+# ingress. nginx needs its runtime dir before starting.
+mkdir -p /run/nginx
+
+# If either process dies, tear the whole add-on down so HA can restart it cleanly.
+pids=()
+term() {
+  trap - TERM INT
+  kill "${pids[@]}" 2>/dev/null || true
+}
+trap term TERM INT
+
+echo "[mihomo] starting nginx (ingress web UI on :8099)"
+nginx -g 'daemon off;' &
+pids+=("$!")
+
 echo "[mihomo] starting with config dir ${CONF_DIR}"
 echo "[mihomo] ---- effective config (head) ----"
 head -20 "${CONF_FILE}"
 echo "[mihomo] ------------------------------------"
-exec /usr/bin/mihomo -d "${CONF_DIR}"
+/usr/bin/mihomo -d "${CONF_DIR}" &
+pids+=("$!")
+
+# Exit as soon as any child exits; term() stops the survivor.
+wait -n
+term
+wait
