@@ -1,5 +1,5 @@
 name: "Mihomo Proxy"
-version: "0.0.6"
+version: "0.0.7"
 slug: mihomo_proxy
 description: "Mihomo (Clash.Meta) TUN transparent proxy for Home Assistant"
 url: "https://github.com/axelburks/ha-addons/tree/main/mihomo"

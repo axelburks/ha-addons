@@ -108,7 +108,12 @@ wireguard_start() {
   server_private="${WG_DIR}/server.key"
   server_public="$(wg pubkey < "${server_private}")"
 
-  sysctl -w net.ipv4.ip_forward=1 >/dev/null
+  if [ "$(cat /proc/sys/net/ipv4/ip_forward)" != "1" ]; then
+    sysctl -w net.ipv4.ip_forward=1 >/dev/null 2>&1 || {
+      echo "[wg] FATAL: IPv4 forwarding is disabled and cannot be enabled" >&2
+      return 1
+    }
+  fi
   ip link add dev "${WG_INTERFACE}" type wireguard
   ip address add "${base}.1/24" dev "${WG_INTERFACE}"
   wg set "${WG_INTERFACE}" private-key "${server_private}" listen-port "${port}"
