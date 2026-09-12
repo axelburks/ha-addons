@@ -4,11 +4,11 @@ FROM ${BUILD_FROM}
 ARG MIHOMO_VERSION=v1.19.30
 ARG BUILD_ARCH
 
-# Dependencies: iptables/iproute2 (TUN routing), curl, jq (read config), tzdata,
+# Dependencies: iptables/iproute2 (TUN routing), curl, jq/yq (read config), tzdata,
 # ca-certificates, nginx (serve the metacubexd panel + reverse-proxy the API on
 # the ingress port), git (fetch the prebuilt panel), wireguard-tools (optional
-# wg0 server, brought up by run.sh only when enabled in the add-on config).
-RUN apk add --no-cache iptables iproute2 curl ca-certificates tzdata jq nginx git wireguard-tools
+# WireGuard server, brought up only when enabled in the add-on config).
+RUN apk add --no-cache iptables iproute2 curl ca-certificates tzdata jq yq nginx git wireguard-tools-wg
 
 # Pick the mihomo binary asset per architecture:
 #   amd64   -> mihomo-linux-amd64-compatible-<ver>.gz (best compatibility, no CPU-feature requirement)
@@ -34,6 +34,7 @@ RUN git clone --depth 1 https://github.com/MetaCubeX/metacubexd.git -b gh-pages 
 COPY ingress.conf /etc/nginx/http.d/ingress.conf
 COPY config.js /opt/metacubexd/config.js
 COPY run.sh /run.sh
-RUN chmod a+x /run.sh
+COPY wireguard.sh /wireguard.sh
+RUN chmod a+x /run.sh /wireguard.sh
 
 CMD [ "/run.sh" ]
